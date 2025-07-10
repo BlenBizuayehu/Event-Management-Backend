@@ -1,3 +1,4 @@
+const Event = require('../models/Event'); 
 const Sponsor = require('../models/Sponsor');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
@@ -24,17 +25,37 @@ exports.getSponsor = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: sponsor });
 });
 
-// @desc    Create sponsor
-// @route   POST /api/sponsors
+// @desc    Create sponsor for specific event
+// @route   POST /api/events/:eventId/sponsors
 // @access  Private/Organizer
 exports.createSponsor = asyncHandler(async (req, res, next) => {
-  // Add organizer to req.body
+  const eventId = req.params.eventId;
+
+  // 1. Check that the event exists
+  const event = await Event.findById(eventId);
+  if (!event) {
+    return next(new ErrorResponse(`Event not found with id ${eventId}`, 404));
+  }
+
+  // 2. Ensure the organizer owns the event
+  if (event.organizer.toString() !== req.user.id) {
+    return next(
+      new ErrorResponse(`User ${req.user.id} is not authorized to add sponsors to this event`, 401)
+    );
+  }
+
+  // 3. Attach organizer and event to the sponsor body
   req.body.organizer = req.user.id;
+  req.body.event = eventId;
 
   const sponsor = await Sponsor.create(req.body);
 
-  res.status(201).json({ success: true, data: sponsor });
+  res.status(201).json({
+    success: true,
+    data: sponsor
+  });
 });
+
 
 // @desc    Update sponsor
 // @route   PUT /api/sponsors/:id

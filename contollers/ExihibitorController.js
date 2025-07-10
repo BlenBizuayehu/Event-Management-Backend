@@ -2,12 +2,12 @@ const Exhibitor = require('../models/Exhibitor');
 const ErrorResponse = require('../utils/ErrorResponse');
 const asyncHandler = require('../middleware/async');
 
-// @desc    Create exhibitor
-// @route   POST /api/exhibitors
-// @access  Private/Organizer
 exports.createExhibitor = asyncHandler(async (req, res, next) => {
-  // Add organizer to request body
+  // Attach organizer and event from URL params
   req.body.organizer = req.user.id;
+  req.body.event = req.params.eventId;
+
+  // Optional: verify event exists, user is organizer of event, etc.
 
   const exhibitor = await Exhibitor.create(req.body);
 
@@ -16,6 +16,7 @@ exports.createExhibitor = asyncHandler(async (req, res, next) => {
     data: exhibitor
   });
 });
+
 
 // @desc    Get all exhibitors
 // @route   GET /api/exhibitors

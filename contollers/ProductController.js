@@ -49,26 +49,30 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 // @desc    Create a new product (with image uploads)
 // @route   POST /api/products
 // @access  Private (Exhibitor)
+// @desc    Create a new product (with image uploads)
+// @route   POST /api/exhibitors/:exhibitorId/products
+// @access  Private (Exhibitor/Admin)
 exports.createProduct = asyncHandler(async (req, res, next) => {
-  // Set the owner to the logged-in exhibitor
-  req.body.exhibitor = req.user.id;
-  
+  const exhibitorId = req.params.exhibitorId;
+
+  if (!exhibitorId) {
+    return next(new ErrorResponse('Missing exhibitorId in the URL', 400));
+  }
+
+  // Set the exhibitor ID from URL param
+  req.body.exhibitor = exhibitorId;
+
   const productData = { ...req.body, images: [] };
 
-  // Handle Image Uploads (if files are present)
+  // Handle image uploads (optional)
   if (req.files && req.files.length > 0) {
     for (const file of req.files) {
-      // Convert buffer to Data URI for Cloudinary
       const b64 = Buffer.from(file.buffer).toString('base64');
-      const dataURI = 'data:' + file.mimetype + ';base64,' + b64;
-
-      // Upload to Cloudinary
+      const dataURI = `data:${file.mimetype};base64,${b64}`;
       const result = await cloudinary.uploader.upload(dataURI, {
-        folder: `product-images/${req.user.id}`, // Organize by exhibitor ID
+        folder: `product-images/${exhibitorId}`,
         resource_type: 'image',
       });
-      
-      // Add the secure URL to the product data
       productData.images.push(result.secure_url);
     }
   }
@@ -77,6 +81,7 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({ success: true, data: product });
 });
+
 
 // @desc    Update a product
 // @route   PUT /api/products/:id

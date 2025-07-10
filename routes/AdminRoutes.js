@@ -12,7 +12,7 @@ const Organizer = require('../models/Organizer');
 const router = express.Router();
 
 // All routes protected and admin-only
-router.use(protect, authorize('super-admin'));
+router.use(protect, authorize('admin'));
 
 router.route('/organizers')
   .get(advancedResults(Organizer), getOrganizers)

@@ -16,7 +16,8 @@ const { registerForEvent } = require('../contollers/AtendeeController'); // Corr
 
 // --- FIX 2: Import the missing partnerRouter ---
 const partnerRouter = require('./PartnerRoutes'); // Import the router for partners
-
+const sponsorRouter = require('./SponsorRoutes');
+const exhibitorRouter= require('./ExihibitorRoutes');
 // --- Other necessary imports ---
 const { protect, authorize } = require('../middleware/auth');
 
@@ -33,6 +34,7 @@ router.get('/', getEvents);
 router.get('/:id', getEvent);
 router.get('/organizer/:organizerId', getEventsByOrganizer);
 router.get('/:eventId/exhibitors', getEventExhibitors);
+router.use('/:eventId/partners', partnerRouter);
 
 // The 'upload' middleware runs first, then the 'registerForEvent' handler
 // Using 'uploadSingle' as it's more descriptive for this use case
@@ -41,7 +43,6 @@ router.post('/:eventId/register', uploadSingle, registerForEvent);
 
 // --- FIX 3: This line will now work correctly ---
 // Re-route any request for '/:eventId/partners' to the partnerRouter
-router.use('/:eventId/partners', partnerRouter);
 
 
 // --- Protected Routes ---
@@ -54,5 +55,7 @@ router.post('/', authorize('organizer', 'admin'), createEvent);
 router.put('/:id', authorize('organizer', 'admin'), updateEvent);
 router.delete('/:id', authorize('organizer', 'admin'), deleteEvent);
 router.post('/:eventId/exhibitors', authorize('organizer', 'admin'), addExhibitorToEvent);
-
+router.use('/:eventId/partners', partnerRouter);
+router.use('/:eventId/sponsors', sponsorRouter);
+router.use('/:eventId/exhibitors', exhibitorRouter);
 module.exports = router;

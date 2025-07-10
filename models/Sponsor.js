@@ -1,4 +1,4 @@
-const mongoose=require("mongoose");
+const mongoose = require('mongoose');
 
 const SponsorSchema = new mongoose.Schema({
   name: {
@@ -39,10 +39,11 @@ const SponsorSchema = new mongoose.Schema({
     ref: 'Organizer',
     required: true
   },
-  conferences: [{
+  event: {  // <-- link sponsor to one event
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conference'
-  }],
+    ref: 'Event',
+    required: true
+  },
   status: {
     type: String,
     enum: ['Pending', 'Confirmed', 'Rejected'],
@@ -51,3 +52,5 @@ const SponsorSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+module.exports = mongoose.model('Sponsor', SponsorSchema);

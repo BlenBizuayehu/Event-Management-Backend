@@ -22,7 +22,4 @@ router
   .get(getEventPartners)
   .post(addPartnerToEvent);
 
-// We also need routes to manage a specific partner by its own ID.
-// These routes don't need to be nested. We can have a separate, non-nested router for them.
-
 module.exports = router;

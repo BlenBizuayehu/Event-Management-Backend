@@ -1,16 +1,19 @@
+// routes/ExhibitorRoutes.js
 const express = require('express');
 const {
   createExhibitor,
   getExhibitors,
   getExhibitor,
-  updateExhibitor
+  updateExhibitor,
 } = require('../contollers/ExihibitorController');
 const { protect, authorize } = require('../middleware/auth');
 const advancedResults = require('../middleware/advancedResults');
 const Exhibitor = require('../models/Exhibitor');
 
-const router = express.Router();
-
+const router = express.Router({ mergeParams: true }); // Important for nested routes
+const productRouter = require('./ProductRoutes');
+router.use('/:exhibitorId/products', productRouter);
+// Get all exhibitors for an event, or create exhibitor under event
 router
   .route('/')
   .get(advancedResults(Exhibitor, ['organizer', 'event']), getExhibitors)
@@ -20,9 +23,5 @@ router
   .route('/:id')
   .get(getExhibitor)
   .put(protect, authorize('organizer'), updateExhibitor);
-  const productRouter = require('./ProductRoutes');
-
-// Re-route /api/exhibitors/:exhibitorId/products to the product router
-router.use('/:exhibitorId/products', productRouter);
 
 module.exports = router;

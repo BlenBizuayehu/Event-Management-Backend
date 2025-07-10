@@ -2,6 +2,7 @@ const Event = require('../models/Event');
 const Exhibitor = require('../models/Exhibitor');
 const ErrorResponse = require('../utils/ErrorResponse');
 const asyncHandler = require('../middleware/async');
+const Organizer=require('../models/Organizer');
 
 // @desc    Get all events
 // @route   GET /api/events

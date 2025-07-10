@@ -24,7 +24,7 @@ exports.protect = async (req, res, next) => {
 
     // Check if user still exists
     let user;
-    if (decoded.role === 'super-admin') {
+    if (decoded.role === 'admin') {
       user = await Admin.findById(decoded.id);
     } else {
       user = await Organizer.findById(decoded.id);

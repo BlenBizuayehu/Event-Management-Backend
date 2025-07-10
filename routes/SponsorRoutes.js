@@ -1,5 +1,4 @@
 const express = require('express');
-const router = express.Router();
 const {
   getSponsors,
   getSponsor,
@@ -9,15 +8,15 @@ const {
 } = require('../contollers/SponsorController');
 const { protect, authorize } = require('../middleware/auth');
 
-// Protect all routes
-router.use(protect);
+const router = express.Router({ mergeParams: true });
 
-// Organizer-only routes
+router.use(protect);
 router.use(authorize('organizer'));
 
+// Route: /api/events/:eventId/sponsors
 router.route('/')
-  .get(getSponsors)
-  .post(createSponsor);
+  .get(getSponsors)             // Optionally: filter by event
+  .post(createSponsor);         // Sponsor tied to eventId
 
 router.route('/:id')
   .get(getSponsor)
