@@ -4,7 +4,7 @@ const {
   getExhibitors,
   getExhibitor,
   updateExhibitor
-} = require('../controllers/exhibitorController');
+} = require('../contollers/ExihibitorController');
 const { protect, authorize } = require('../middleware/auth');
 const advancedResults = require('../middleware/advancedResults');
 const Exhibitor = require('../models/Exhibitor');

@@ -33,6 +33,11 @@ const ExhibitorSchema = new mongoose.Schema({
     required: [true, 'Please provide a booth number'],
     trim: true
   },
+   event: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    required: [true, 'Please provide an event ID']
+  },
   socialMediaLink: {
     type: String,
     trim: true

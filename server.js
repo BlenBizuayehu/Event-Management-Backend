@@ -35,6 +35,7 @@ app.use('/api/conferences', require('./routes/ConferenceRoutes'));
 app.use('/api/sponsors', require('./routes/SponsorRoutes'));
 app.use('/api/partners', require('./routes/PartnerRoutes')); 
 app.use('/api/events', require('./routes/EventRoutes'));
+app.use('/api/exhibitors', require('./routes/ExihibitorRoutes'));
 
 app.use('/api/products', require('./routes/ProductRoutes'));
 
