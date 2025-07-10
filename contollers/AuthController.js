@@ -34,14 +34,10 @@ exports.login = asyncHandler(async (req, res, next) => {
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
-    // The email was correct, but the password was wrong.
-    // Send the same generic error for security reasons.
-    return next(new ErrorResponse('Invalid credentials', 401));
+     return next(new ErrorResponse('Invalid credentials', 401));
   }
 
-  // 4. Handle Post-Login Logic (e.g., update lastLogin timestamp)
-  // `instanceof` is used to check which type of user logged in
-  if (user instanceof Organizer || user instanceof Exhibitor) {
+ if (user instanceof Organizer || user instanceof Exhibitor) {
     user.lastLogin = Date.now();
     // We skip validation here because we are only updating the login time
     await user.save({ validateBeforeSave: false });
@@ -89,9 +85,6 @@ exports.getMe = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 exports.logout = asyncHandler(async (req, res, next) => {
-  // For a stateless JWT system, the primary action is for the client to
-  // delete the token. This server endpoint is a standard practice to
-  // formally acknowledge the logout process.
   res.status(200).json({
     success: true,
     data: {},
@@ -103,10 +96,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
-  // Dynamically determine the role for the token payload.
-  // It first checks for an explicit `.role` property (on Admin, Organizer).
-  // If not found, it uses the model name (for Exhibitor).
-  const role = user.role || user.constructor.modelName.toLowerCase();
+ const role = user.role || user.constructor.modelName.toLowerCase();
 
   const token = jwt.sign(
     { id: user._id, role: role },

@@ -7,7 +7,6 @@ const asyncHandler = require('../middleware/async');
 // @route   GET /api/events/:eventId/partners
 // @access  Private (Organizer)
 exports.getEventPartners = asyncHandler(async (req, res, next) => {
-  // Find all partners associated with the eventId from the URL
   const partners = await Partner.find({ event: req.params.eventId }).populate({
     path: 'organizer',
     select: 'name email'
@@ -24,7 +23,6 @@ exports.getEventPartners = asyncHandler(async (req, res, next) => {
 // @route   GET /api/partners/:id
 // @access  Private (Organizer)
 exports.getPartner = asyncHandler(async (req, res, next) => {
-  // Find a specific partner by their own ID
   const partner = await Partner.findById(req.params.id).populate('event', 'name');
 
   if (!partner) {
@@ -41,7 +39,6 @@ exports.getPartner = asyncHandler(async (req, res, next) => {
 exports.addPartnerToEvent = asyncHandler(async (req, res, next) => {
   const { eventId } = req.params;
 
-  // 1. Verify the event exists and is owned by the logged-in organizer
   const event = await Event.findById(eventId);
   if (!event) {
     return next(new ErrorResponse(`Event not found with id ${eventId}`, 404));
@@ -50,17 +47,12 @@ exports.addPartnerToEvent = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`User is not authorized to add partners to this event`, 401));
   }
 
-  // 2. Add main organizer and event ID to the request body
   req.body.organizer = req.user.id;
   req.body.event = eventId;
 
-  // 3. Create the new partner record
   const partner = await Partner.create(req.body);
 
-  // 4. (Recommended) Add the partner to the event's own list of partners if it has one
-  // event.partners.push(partner._id);
-  // await event.save();
-
+ 
   res.status(201).json({
     success: true,
     data: partner,

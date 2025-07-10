@@ -8,33 +8,26 @@ const Organizer=require('../models/Organizer');
 // @route   GET /api/events
 // @access  Public
 exports.getEvents = asyncHandler(async (req, res, next) => {
-  // Advanced filtering, sorting, pagination
   let query;
   const reqQuery = { ...req.query };
   
-  // Fields to exclude
   const removeFields = ['select', 'sort', 'page', 'limit'];
   removeFields.forEach(param => delete reqQuery[param]);
   
-  // Create query string
   let queryStr = JSON.stringify(reqQuery);
   
-  // Create operators ($gt, $gte, etc)
   queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
   
-  // Finding resource
   query = Event.find(JSON.parse(queryStr)).populate({
     path: 'organizer',
     select: 'name email'
   });
 
-  // Select fields
   if (req.query.select) {
     const fields = req.query.select.split(',').join(' ');
     query = query.select(fields);
   }
 
-  // Sort
   if (req.query.sort) {
     const sortBy = req.query.sort.split(',').join(' ');
     query = query.sort(sortBy);
@@ -140,14 +133,12 @@ exports.updateEvent = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Make sure user is event organizer or admin
   if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
     return next(
       new ErrorResponse(`User not authorized to update this event`, 401)
     );
   }
 
-  // Prevent changing organizer when updating
   if (req.body.organizer && req.body.organizer !== req.user.id) {
     return next(
       new ErrorResponse(`Cannot change event organizer`, 400)
@@ -177,7 +168,6 @@ exports.deleteEvent = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Make sure user is event organizer or admin
   if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
     return next(
       new ErrorResponse(`User not authorized to delete this event`, 401)

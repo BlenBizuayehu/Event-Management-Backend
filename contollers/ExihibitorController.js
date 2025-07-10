@@ -7,8 +7,6 @@ exports.createExhibitor = asyncHandler(async (req, res, next) => {
   req.body.organizer = req.user.id;
   req.body.event = req.params.eventId;
 
-  // Optional: verify event exists, user is organizer of event, etc.
-
   const exhibitor = await Exhibitor.create(req.body);
 
   res.status(201).json({
@@ -57,7 +55,6 @@ exports.updateExhibitor = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Verify organizer owns the exhibitor
   if (exhibitor.organizer.toString() !== req.user.id) {
     return next(
       new ErrorResponse(`Not authorized to update this exhibitor`, 401)

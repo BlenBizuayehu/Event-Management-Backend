@@ -3,7 +3,7 @@ const Event = require('../models/Event');
 const ErrorResponse = require('../utils/ErrorResponse');
 const asyncHandler = require('../middleware/async');
 const { upload, cloudinary } = require('../utils/fileUploader');
-
+const QRCode = require('qrcode');
 /**
  * @desc    Register an attendee for a specific event
  * @route   POST /api/events/:eventId/register
@@ -74,9 +74,10 @@ exports.getBadgeDetails = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Invalid badge ID. Attendee not found.', 404));
   }
 
-  // The data for the QR code should be something unique and verifiable.
-  // A good practice is to create a URL that links back to this same endpoint.
   const qrCodeData = `${process.env.APP_URL}/api/attendees/badge/${attendee.badgeId}`;
+
+  // Generate QR code as a data URL (base64 encoded PNG)
+  const qrCodeImageUrl = await QRCode.toDataURL(qrCodeData);
 
   res.status(200).json({
     success: true,
@@ -84,7 +85,8 @@ exports.getBadgeDetails = asyncHandler(async (req, res, next) => {
       name: attendee.name,
       eventName: attendee.event.name,
       profilePictureUrl: attendee.profilePictureUrl,
-      qrCodeData: qrCodeData, // Data to be encoded in the QR code
+      qrCodeData: qrCodeData,      // The URL encoded in the QR code
+      qrCodeImageUrl: qrCodeImageUrl // The base64 image data URL of the QR code
     },
   });
 });

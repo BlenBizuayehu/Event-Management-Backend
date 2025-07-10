@@ -1,5 +1,5 @@
 const express = require('express');
-const { getBadgeDetails } = require('../controllers/AttendeeController');
+const { getBadgeDetails } = require('../contollers/AtendeeController');
 
 const router = express.Router();
 

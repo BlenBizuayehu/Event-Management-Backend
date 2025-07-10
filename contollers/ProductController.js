@@ -46,9 +46,7 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: product });
 });
 
-// @desc    Create a new product (with image uploads)
-// @route   POST /api/products
-// @access  Private (Exhibitor)
+
 // @desc    Create a new product (with image uploads)
 // @route   POST /api/exhibitors/:exhibitorId/products
 // @access  Private (Exhibitor/Admin)
@@ -59,7 +57,6 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Missing exhibitorId in the URL', 400));
   }
 
-  // Set the exhibitor ID from URL param
   req.body.exhibitor = exhibitorId;
 
   const productData = { ...req.body, images: [] };
@@ -97,10 +94,7 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
   if (product.exhibitor.toString() !== req.user.id) {
     return next(new ErrorResponse(`User is not authorized to update this product`, 401));
   }
-  
-  // Note: Handling image updates (adding/removing specific images) is complex.
-  // This example only handles text/field updates.
-  product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
