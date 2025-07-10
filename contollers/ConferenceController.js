@@ -6,7 +6,24 @@ const asyncHandler = require('../middleware/async');
 // @route   GET /api/conferences
 // @access  Public
 exports.getConferences = asyncHandler(async (req, res, next) => {
-  res.status(200).json(res.advancedResults);
+  let query;
+
+  if (req.params.eventId) {
+    query = Conference.find({ event: req.params.eventId });
+  } else {
+    query = Conference.find();
+  }
+
+  const conferences = await query
+    .populate('organizer', 'name email')
+    .populate('sponsors')
+    .populate('partners');
+
+  res.status(200).json({
+    success: true,
+    count: conferences.length,
+    data: conferences,
+  });
 });
 
 // @desc    Get single conference
@@ -32,13 +49,18 @@ exports.getConference = asyncHandler(async (req, res, next) => {
 // @route   POST /api/conferences
 // @access  Private/Organizer
 exports.createConference = asyncHandler(async (req, res, next) => {
-  // Add organizer to req.body
+  // Attach organizer and event from URL or authenticated user
   req.body.organizer = req.user.id;
+
+  if (req.params.eventId) {
+    req.body.event = req.params.eventId;
+  }
 
   const conference = await Conference.create(req.body);
 
   res.status(201).json({ success: true, data: conference });
 });
+
 
 // @desc    Update conference
 // @route   PUT /api/conferences/:id
@@ -91,28 +113,3 @@ exports.deleteConference = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: {} });
 });
 
-// @desc    Add sponsor to conference
-// @route   POST /api/conferences/:id/sponsors
-// @access  Private/Organizer
-exports.addSponsor = asyncHandler(async (req, res, next) => {
-  const conference = await Conference.findByIdAndUpdate(
-    req.params.id,
-    { $addToSet: { sponsors: req.body.sponsorId } },
-    { new: true, runValidators: true }
-  );
-
-  res.status(200).json({ success: true, data: conference });
-});
-
-// @desc    Add partner to conference
-// @route   POST /api/conferences/:id/partners
-// @access  Private/Organizer
-exports.addPartner = asyncHandler(async (req, res, next) => {
-  const conference = await Conference.findByIdAndUpdate(
-    req.params.id,
-    { $addToSet: { partners: req.body.partnerId } },
-    { new: true, runValidators: true }
-  );
-
-  res.status(200).json({ success: true, data: conference });
-});

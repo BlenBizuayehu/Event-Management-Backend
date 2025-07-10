@@ -18,6 +18,8 @@ const { registerForEvent } = require('../contollers/AtendeeController'); // Corr
 const partnerRouter = require('./PartnerRoutes'); // Import the router for partners
 const sponsorRouter = require('./SponsorRoutes');
 const exhibitorRouter= require('./ExihibitorRoutes');
+const conferenceRouter = require('./ConferenceRoutes');
+
 // --- Other necessary imports ---
 const { protect, authorize } = require('../middleware/auth');
 
@@ -35,6 +37,8 @@ router.get('/:id', getEvent);
 router.get('/organizer/:organizerId', getEventsByOrganizer);
 router.get('/:eventId/exhibitors', getEventExhibitors);
 router.use('/:eventId/partners', partnerRouter);
+router.use('/:eventId/conferences', conferenceRouter);
+
 
 // The 'upload' middleware runs first, then the 'registerForEvent' handler
 // Using 'uploadSingle' as it's more descriptive for this use case
