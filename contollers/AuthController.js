@@ -63,6 +63,8 @@ exports.getMe = asyncHandler(async (req, res, next) => {
     user = await SystemAdmin.findById(id);
   } else if (role === 'organizer') {
     user = await Organizer.findById(id);
+  } else if (role === 'super-admin') {
+    user = await SystemAdmin.findById(id);
   } else if (role === 'exhibitor') {
     user = await Exhibitor.findById(id);
   }

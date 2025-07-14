@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const ErrorResponse = require('../utils/ErrorResponse');
-const Admin = require('../models/SystemAdmin');
+const SystemAdmin = require('../models/SystemAdmin');
 const Organizer = require('../models/Organizer');
 const Exhibitor = require('../models/Exhibitor'); // ✅ ADD THIS
 
@@ -25,7 +25,10 @@ exports.protect = async (req, res, next) => {
 
     switch (decoded.role) {
       case 'admin':
-        user = await Admin.findById(decoded.id);
+        user = await SystemAdmin.findById(decoded.id);
+        break;
+    case 'super-admin':
+        user = await SystemAdmin.findById(decoded.id);
         break;
       case 'organizer':
         user = await Organizer.findById(decoded.id);

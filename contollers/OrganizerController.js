@@ -90,3 +90,75 @@ exports.login = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getMyEvents = asyncHandler(async (req, res, next) => {
+  // Advanced filtering, sorting, pagination for organizer's own events
+  let query;
+  const reqQuery = { ...req.query };
+  
+  // Fields to exclude
+  const removeFields = ['select', 'sort', 'page', 'limit'];
+  removeFields.forEach(param => delete reqQuery[param]);
+  
+  // Create base query - only events where organizer matches logged-in user
+  query = Event.find({ organizer: req.user.id });
+  
+  // Create query string for additional filters
+  let queryStr = JSON.stringify(reqQuery);
+  
+  // Create operators ($gt, $gte, etc)
+  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+  
+  // Apply additional filters
+  if (Object.keys(reqQuery).length > 0) {
+    query = query.find(JSON.parse(queryStr));
+  }
+
+  // Select fields
+  if (req.query.select) {
+    const fields = req.query.select.split(',').join(' ');
+    query = query.select(fields);
+  }
+
+  // Sort
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(',').join(' ');
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort('-createdAt'); // Default sort by newest
+  }
+
+  // Pagination
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  const total = await Event.countDocuments({ organizer: req.user.id });
+
+  query = query.skip(startIndex).limit(limit);
+
+  // Executing query
+  const events = await query;
+
+  // Pagination result
+  const pagination = {};
+  if (endIndex < total) {
+    pagination.next = {
+      page: page + 1,
+      limit
+    };
+  }
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit
+    };
+  }
+
+  res.status(200).json({
+    success: true,
+    count: events.length,
+    pagination,
+    data: events
+  });
+});

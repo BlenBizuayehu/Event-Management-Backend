@@ -14,4 +14,6 @@ router.route('/events')
   .post(createEvent)
   .get(getEvents);
 
+  router.get('/my-events', getMyEvents);
+
 module.exports = router;
