@@ -1,9 +1,9 @@
-const SystemAdmin = require('../models/SystemAdmin');
-const Organizer = require('../models/Organizer');
-const Exhibitor = require('../models/Exhibitor');
-const ErrorResponse = require('../utils/ErrorResponse');
-const asyncHandler = require('../middleware/async');
-const jwt = require('jsonwebtoken');
+const SystemAdmin = require("../models/SystemAdmin");
+const Organizer = require("../models/Organizer");
+const Exhibitor = require("../models/Exhibitor");
+const ErrorResponse = require("../utils/ErrorResponse");
+const asyncHandler = require("../middleware/async");
+const jwt = require("jsonwebtoken");
 
 /**
  * @desc    Login user (Admin, Organizer, or Exhibitor)
@@ -15,18 +15,18 @@ exports.login = asyncHandler(async (req, res, next) => {
 
   // 1. Validation: Ensure email and password are provided
   if (!email || !password) {
-    return next(new ErrorResponse('Please provide an email and password', 400));
+    return next(new ErrorResponse("Please provide an email and password", 400));
   }
 
   // 2. Find User: Sequentially check each user collection
   const user =
-    (await SystemAdmin.findOne({ email }).select('+password')) ||
-    (await Organizer.findOne({ email }).select('+password')) ||
-    (await Exhibitor.findOne({ email }).select('+password'));
+    (await SystemAdmin.findOne({ email }).select("+password")) ||
+    (await Organizer.findOne({ email }).select("+password")) ||
+    (await Exhibitor.findOne({ email }).select("+password"));
 
   // If no user is found in any collection, the email is not registered
   if (!user) {
-    return next(new ErrorResponse('Invalid credentials', 401));
+    return next(new ErrorResponse("Invalid credentials", 401));
   }
 
   // 3. Check if password matches
@@ -34,10 +34,10 @@ exports.login = asyncHandler(async (req, res, next) => {
   const isMatch = await user.matchPassword(password);
 
   if (!isMatch) {
-     return next(new ErrorResponse('Invalid credentials', 401));
+    return next(new ErrorResponse("Invalid credentials", 401));
   }
 
- if (user instanceof Organizer || user instanceof Exhibitor) {
+  if (user instanceof Organizer || user instanceof Exhibitor) {
     user.lastLogin = Date.now();
     // We skip validation here because we are only updating the login time
     await user.save({ validateBeforeSave: false });
@@ -46,7 +46,6 @@ exports.login = asyncHandler(async (req, res, next) => {
   // 5. Create token and send response
   sendTokenResponse(user, 200, res);
 });
-
 
 /**
  * @desc    Get current logged in user's profile
@@ -59,27 +58,28 @@ exports.getMe = asyncHandler(async (req, res, next) => {
   let user;
 
   // Fetch the full user document from the correct collection based on the role
-  if (role === 'admin') {
+  if (role === "admin" || role === "super-admin") {
     user = await SystemAdmin.findById(id);
-  } else if (role === 'organizer') {
+  } else if (role === "organizer") {
     user = await Organizer.findById(id);
-  } else if (role === 'super-admin') {
-    user = await SystemAdmin.findById(id);
-  } else if (role === 'exhibitor') {
+  } else if (role === "exhibitor") {
     user = await Exhibitor.findById(id);
   }
 
   // If the user was deleted after the token was issued
   if (!user) {
-    return next(new ErrorResponse('User not found', 404));
+    return next(new ErrorResponse("User not found", 404));
   }
+
+  // Ensure the role is included in the response
+  const userObj = user.toObject ? user.toObject() : { ...user };
+  userObj.role = role;
 
   res.status(200).json({
     success: true,
-    data: user,
+    data: userObj,
   });
 });
-
 
 /**
  * @desc    Log user out
@@ -93,18 +93,15 @@ exports.logout = asyncHandler(async (req, res, next) => {
   });
 });
 
-
 // --- Helper Function ---
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
- const role = user.role || user.constructor.modelName.toLowerCase();
+  const role = user.role || user.constructor.modelName.toLowerCase();
 
-  const token = jwt.sign(
-    { id: user._id, role: role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE }
-  );
+  const token = jwt.sign({ id: user._id, role: role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
+  });
 
   res.status(statusCode).json({
     success: true,

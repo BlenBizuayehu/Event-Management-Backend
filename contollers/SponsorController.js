@@ -1,7 +1,7 @@
-const Event = require('../models/Event'); 
-const Sponsor = require('../models/Sponsor');
-const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middleware/async');
+const Event = require("../models/Event");
+const Sponsor = require("../models/Sponsor");
+const asyncHandler = require("../middleware/async");
+const ErrorResponse = require("../utils/ErrorResponse");
 
 // @desc    Get all sponsors
 // @route   GET /api/sponsors
@@ -40,7 +40,10 @@ exports.createSponsor = asyncHandler(async (req, res, next) => {
   // 2. Ensure the organizer owns the event
   if (event.organizer.toString() !== req.user.id) {
     return next(
-      new ErrorResponse(`User ${req.user.id} is not authorized to add sponsors to this event`, 401)
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to add sponsors to this event`,
+        401
+      )
     );
   }
 
@@ -52,10 +55,9 @@ exports.createSponsor = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    data: sponsor
+    data: sponsor,
   });
 });
-
 
 // @desc    Update sponsor
 // @route   PUT /api/sponsors/:id
@@ -72,13 +74,16 @@ exports.updateSponsor = asyncHandler(async (req, res, next) => {
   // Make sure user is sponsor organizer
   if (sponsor.organizer.toString() !== req.user.id) {
     return next(
-      new ErrorResponse(`User ${req.user.id} is not authorized to update this sponsor`, 401)
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update this sponsor`,
+        401
+      )
     );
   }
 
   sponsor = await Sponsor.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   res.status(200).json({ success: true, data: sponsor });
@@ -99,7 +104,10 @@ exports.deleteSponsor = asyncHandler(async (req, res, next) => {
   // Make sure user is sponsor organizer
   if (sponsor.organizer.toString() !== req.user.id) {
     return next(
-      new ErrorResponse(`User ${req.user.id} is not authorized to delete this sponsor`, 401)
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to delete this sponsor`,
+        401
+      )
     );
   }
 
