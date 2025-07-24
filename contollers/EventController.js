@@ -1,8 +1,8 @@
-const Event = require('../models/Event');
-const Exhibitor = require('../models/Exhibitor');
-const ErrorResponse = require('../utils/ErrorResponse');
-const asyncHandler = require('../middleware/async');
-const Organizer=require('../models/Organizer');
+const Event = require("../models/Event");
+const Exhibitor = require("../models/Exhibitor");
+const ErrorResponse = require("../utils/ErrorResponse");
+const asyncHandler = require("../middleware/async");
+const Organizer = require("../models/Organizer");
 
 // @desc    Get all events
 // @route   GET /api/events
@@ -10,29 +10,32 @@ const Organizer=require('../models/Organizer');
 exports.getEvents = asyncHandler(async (req, res, next) => {
   let query;
   const reqQuery = { ...req.query };
-  
-  const removeFields = ['select', 'sort', 'page', 'limit'];
-  removeFields.forEach(param => delete reqQuery[param]);
-  
+
+  const removeFields = ["select", "sort", "page", "limit"];
+  removeFields.forEach((param) => delete reqQuery[param]);
+
   let queryStr = JSON.stringify(reqQuery);
-  
-  queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
-  
+
+  queryStr = queryStr.replace(
+    /\b(gt|gte|lt|lte|in)\b/g,
+    (match) => `$${match}`
+  );
+
   query = Event.find(JSON.parse(queryStr)).populate({
-    path: 'organizer',
-    select: 'name email'
+    path: "organizer",
+    select: "name email",
   });
 
   if (req.query.select) {
-    const fields = req.query.select.split(',').join(' ');
+    const fields = req.query.select.split(",").join(" ");
     query = query.select(fields);
   }
 
   if (req.query.sort) {
-    const sortBy = req.query.sort.split(',').join(' ');
+    const sortBy = req.query.sort.split(",").join(" ");
     query = query.sort(sortBy);
   } else {
-    query = query.sort('startDate');
+    query = query.sort("startDate");
   }
 
   // Pagination
@@ -52,13 +55,13 @@ exports.getEvents = asyncHandler(async (req, res, next) => {
   if (endIndex < total) {
     pagination.next = {
       page: page + 1,
-      limit
+      limit,
     };
   }
   if (startIndex > 0) {
     pagination.prev = {
       page: page - 1,
-      limit
+      limit,
     };
   }
 
@@ -66,7 +69,7 @@ exports.getEvents = asyncHandler(async (req, res, next) => {
     success: true,
     count: events.length,
     pagination,
-    data: events
+    data: events,
   });
 });
 
@@ -76,16 +79,16 @@ exports.getEvents = asyncHandler(async (req, res, next) => {
 exports.getEvent = asyncHandler(async (req, res, next) => {
   const event = await Event.findById(req.params.id)
     .populate({
-      path: 'organizer',
-      select: 'name email'
+      path: "organizer",
+      select: "name email",
     })
     .populate({
-      path: 'exhibitors',
-      select: 'name contactPerson email boothNumber'
+      path: "exhibitors",
+      select: "name contactPerson email boothNumber",
     })
     .populate({
-      path: 'attendees',
-      select: 'name email registration_date'
+      path: "attendees",
+      select: "name email registration_date",
     });
 
   if (!event) {
@@ -96,7 +99,7 @@ exports.getEvent = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: event
+    data: event,
   });
 });
 
@@ -110,14 +113,16 @@ exports.createEvent = asyncHandler(async (req, res, next) => {
   // Verify organizer exists and is active
   const organizer = await Organizer.findById(req.user.id);
   if (!organizer || !organizer.isActive) {
-    return next(new ErrorResponse('Organizer not authorized to create events', 401));
+    return next(
+      new ErrorResponse("Organizer not authorized to create events", 401)
+    );
   }
 
   const event = await Event.create(req.body);
 
   res.status(201).json({
     success: true,
-    data: event
+    data: event,
   });
 });
 
@@ -133,26 +138,24 @@ exports.updateEvent = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (event.organizer.toString() !== req.user.id && req.user.role !== "admin") {
     return next(
       new ErrorResponse(`User not authorized to update this event`, 401)
     );
   }
 
   if (req.body.organizer && req.body.organizer !== req.user.id) {
-    return next(
-      new ErrorResponse(`Cannot change event organizer`, 400)
-    );
+    return next(new ErrorResponse(`Cannot change event organizer`, 400));
   }
 
   event = await Event.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   res.status(200).json({
     success: true,
-    data: event
+    data: event,
   });
 });
 
@@ -168,7 +171,7 @@ exports.deleteEvent = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (event.organizer.toString() !== req.user.id && req.user.role !== "admin") {
     return next(
       new ErrorResponse(`User not authorized to delete this event`, 401)
     );
@@ -178,7 +181,7 @@ exports.deleteEvent = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: {}
+    data: {},
   });
 });
 
@@ -186,16 +189,17 @@ exports.deleteEvent = asyncHandler(async (req, res, next) => {
 // @route   GET /api/events/organizer/:organizerId
 // @access  Public
 exports.getEventsByOrganizer = asyncHandler(async (req, res, next) => {
-  const events = await Event.find({ organizer: req.params.organizerId })
-    .populate({
-      path: 'exhibitors',
-      select: 'name boothNumber'
-    });
+  const events = await Event.find({
+    organizer: req.params.organizerId,
+  }).populate({
+    path: "exhibitors",
+    select: "name boothNumber",
+  });
 
   res.status(200).json({
     success: true,
     count: events.length,
-    data: events
+    data: events,
   });
 });
 
@@ -207,7 +211,7 @@ exports.addExhibitorToEvent = asyncHandler(async (req, res, next) => {
     // Verify event exists and belongs to organizer
     const event = await Event.findOne({
       _id: req.params.eventId,
-      organizer: req.user.id
+      organizer: req.user.id,
     });
 
     if (!event) {
@@ -217,18 +221,23 @@ exports.addExhibitorToEvent = asyncHandler(async (req, res, next) => {
     // Check for existing exhibitor with same name for this event
     const existingExhibitor = await Exhibitor.findOne({
       name: req.body.name,
-      event: req.params.eventId
+      event: req.params.eventId,
     });
 
     if (existingExhibitor) {
-      return next(new ErrorResponse(`Exhibitor with this name already exists for this event`, 400));
+      return next(
+        new ErrorResponse(
+          `Exhibitor with this name already exists for this event`,
+          400
+        )
+      );
     }
 
     // Create exhibitor
     const exhibitor = await Exhibitor.create({
       ...req.body,
       event: req.params.eventId,
-      organizer: req.user.id
+      organizer: req.user.id,
     });
 
     // Add to event
@@ -237,13 +246,14 @@ exports.addExhibitorToEvent = asyncHandler(async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: exhibitor
+      data: exhibitor,
     });
-
   } catch (err) {
     // Handle duplicate key errors
     if (err.code === 11000) {
-      return next(new ErrorResponse(`Exhibitor with these details already exists`, 400));
+      return next(
+        new ErrorResponse(`Exhibitor with these details already exists`, 400)
+      );
     }
     next(err);
   }
@@ -258,6 +268,6 @@ exports.getEventExhibitors = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     count: exhibitors.length,
-    data: exhibitors
+    data: exhibitors,
   });
 });

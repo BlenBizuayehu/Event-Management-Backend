@@ -1,21 +1,24 @@
-const jwt = require('jsonwebtoken');
-const ErrorResponse = require('../utils/ErrorResponse');
-const SystemAdmin = require('../models/SystemAdmin');
-const Organizer = require('../models/Organizer');
-const Exhibitor = require('../models/Exhibitor'); // ✅ ADD THIS
+const jwt = require("jsonwebtoken");
+const ErrorResponse = require("../utils/ErrorResponse");
+const Admin = require("../models/SystemAdmin");
+const Organizer = require("../models/Organizer");
+const Exhibitor = require("../models/Exhibitor");
+
+// Define role hierarchy at the top
+const roleHierarchy = ["exhibitor", "organizer", "admin", "super-admin"];
 
 exports.protect = async (req, res, next) => {
   let token;
 
   if (
     req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
+    req.headers.authorization.startsWith("Bearer")
   ) {
-    token = req.headers.authorization.split(' ')[1];
+    token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
-    return next(new ErrorResponse('Not authorized to access this route', 401));
+    return next(new ErrorResponse("Not authorized to access this route", 401));
   }
 
   try {
@@ -24,43 +27,48 @@ exports.protect = async (req, res, next) => {
     let user;
 
     switch (decoded.role) {
-      case 'admin':
-        user = await SystemAdmin.findById(decoded.id);
+      case "admin":
+        user = await Admin.findById(decoded.id);
         break;
-    case 'super-admin':
-        user = await SystemAdmin.findById(decoded.id);
+      case "super-admin":
+        user = await Admin.findById(decoded.id);
         break;
-      case 'organizer':
+      case "organizer":
         user = await Organizer.findById(decoded.id);
         break;
-      case 'exhibitor':
+      case "exhibitor":
         user = await Exhibitor.findById(decoded.id);
         break;
       default:
-        return next(new ErrorResponse('Invalid role in token', 401));
+        return next(new ErrorResponse("Invalid role in token", 401));
     }
 
     if (!user) {
-      return next(new ErrorResponse('User no longer exists', 401));
+      return next(new ErrorResponse("User no longer exists", 401));
     }
 
     req.user = user;
     req.user.role = decoded.role;
     next();
-
   } catch (err) {
-    return next(new ErrorResponse('Not authorized to access this route', 401));
+    return next(new ErrorResponse("Not authorized to access this route", 401));
   }
 };
-
 
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    const userRole = req.user.role;
+    if (userRole === "super-admin") {
+      return next();
+    }
+    const requiredMin = Math.min(...roles.map((r) => roleHierarchy.indexOf(r)));
+    const userLevel = roleHierarchy.indexOf(userRole);
+    // console.log("AUTH DEBUG:", { userRole, roles, requiredMin, userLevel });
+    if (userLevel === -1 || userLevel < requiredMin) {
       return next(
         new ErrorResponse(
-          `User role ${req.user.role} is not authorized to access this route`,
+          `User role ${userRole} is not authorized to access this route`,
           403
         )
       );

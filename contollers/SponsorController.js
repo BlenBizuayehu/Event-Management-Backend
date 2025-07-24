@@ -4,10 +4,17 @@ const asyncHandler = require("../middleware/async");
 const ErrorResponse = require("../utils/ErrorResponse");
 
 // @desc    Get all sponsors
-// @route   GET /api/sponsors
+// @route   GET /api/sponsors or /api/events/:eventId/sponsors
 // @access  Private/Organizer
 exports.getSponsors = asyncHandler(async (req, res, next) => {
-  res.status(200).json(res.advancedResults);
+  const filter = {};
+  if (req.params.eventId) {
+    filter.event = req.params.eventId;
+  }
+  const sponsors = await Sponsor.find(filter);
+  res
+    .status(200)
+    .json({ success: true, count: sponsors.length, data: sponsors });
 });
 
 // @desc    Get single sponsor

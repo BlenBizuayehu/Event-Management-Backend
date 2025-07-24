@@ -1,6 +1,6 @@
-const Exhibitor = require('../models/Exhibitor');
-const ErrorResponse = require('../utils/ErrorResponse');
-const asyncHandler = require('../middleware/async');
+const Exhibitor = require("../models/Exhibitor");
+const ErrorResponse = require("../utils/ErrorResponse");
+const asyncHandler = require("../middleware/async");
 
 exports.createExhibitor = asyncHandler(async (req, res, next) => {
   // Attach organizer and event from URL params
@@ -11,10 +11,9 @@ exports.createExhibitor = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    data: exhibitor
+    data: exhibitor,
   });
 });
-
 
 // @desc    Get all exhibitors
 // @route   GET /api/exhibitors
@@ -28,8 +27,8 @@ exports.getExhibitors = asyncHandler(async (req, res, next) => {
 // @access  Public
 exports.getExhibitor = asyncHandler(async (req, res, next) => {
   const exhibitor = await Exhibitor.findById(req.params.id)
-    .populate('organizer', 'name email')
-    .populate('event', 'name');
+    .populate("organizer", "name email")
+    .populate("event", "name");
 
   if (!exhibitor) {
     return next(
@@ -39,7 +38,7 @@ exports.getExhibitor = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: exhibitor
+    data: exhibitor,
   });
 });
 
@@ -63,11 +62,11 @@ exports.updateExhibitor = asyncHandler(async (req, res, next) => {
 
   exhibitor = await Exhibitor.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   res.status(200).json({
     success: true,
-    data: exhibitor
+    data: exhibitor,
   });
 });
